@@ -39,7 +39,7 @@ def setup_logger(logger_name, logger_level=logging.DEBUG, handlers=None,
     :param remove_existing_handlers: Determines whether to remove existing
                                      handlers before adding new ones
     :return: A logger instance.
-    :rtype: Logger
+    :rtype: `logging.Logger`
     """
 
     logger = logging.getLogger(logger_name)
@@ -138,21 +138,32 @@ def find_type_in_kwargs(cls, all_args):
 
 class LocalCommandRunner(object):
 
-    def __init__(self, logger=None, host='localhost'):
+    def __init__(self, logger=None):
 
         """
         :param logger: This logger will be used for
                        printing the output and the command.
         """
 
-        logger = logger or setup_logger('LocalCommandRunner')
+        logger = logger or setup_logger('cloudify.local')
         self.logger = logger
-        self.host = host
+
+    def sudo(self, command,
+             exit_on_failure=True,
+             stdout_pipe=True,
+             stderr_pipe=True,
+             cwd=None):
+        return self.run('sudo {0}'.format(command),
+                        exit_on_failure=exit_on_failure,
+                        stderr_pipe=stderr_pipe,
+                        stdout_pipe=stdout_pipe,
+                        cwd=cwd)
 
     def run(self, command,
             exit_on_failure=True,
             stdout_pipe=True,
-            stderr_pipe=True):
+            stderr_pipe=True,
+            cwd=None):
 
         """
         Runs local commands.
@@ -166,30 +177,27 @@ class LocalCommandRunner(object):
         :rtype: CommandExecutionResponse
         """
 
-        self.logger.info('[{0}] run: {1}'.format(self.host, command))
+        self.logger.debug('run: {0}'.format(command))
         shlex_split = shlex.split(command)
         stdout = subprocess.PIPE if stdout_pipe else None
         stderr = subprocess.PIPE if stderr_pipe else None
         p = subprocess.Popen(shlex_split, stdout=stdout,
-                             stderr=stderr)
+                             stderr=stderr, cwd=cwd)
         out, err = p.communicate()
-        if p.returncode == 0:
-            if out:
-                self.logger.info('[{0}] out: {1}'.format(self.host, out))
-        else:
+        if p.returncode != 0:
             error = CommandExecutionException(
                 command=command,
-                code=p.returncode,
                 error=err,
-                output=out)
-            self.logger.error(error)
+                output=out,
+                code=p.returncode)
             if exit_on_failure:
                 raise error
+            else:
+                self.logger.error(error)
 
         return CommandExecutionResponse(command=command,
-                                        std_out=out,
-                                        std_err=err,
-                                        return_code=p.returncode)
+                                        output=out,
+                                        code=p.returncode)
 
 
 class CommandExecutionResponse(object):
@@ -198,13 +206,11 @@ class CommandExecutionResponse(object):
     Wrapper object for info returned when running commands.
 
     :param command: The command that was executed.
-    :param std_out: The output from the execution.
-    :param std_err: The error message from the execution.
-    :param return_code: The return code from the execution.
+    :param output: The output from the execution.
+    :param code: The return code from the execution.
     """
 
-    def __init__(self, command, std_out, std_err, return_code):
+    def __init__(self, command, output, code):
         self.command = command
-        self.std_out = std_out
-        self.std_err = std_err
-        self.return_code = return_code
+        self.output = output
+        self.code = code
