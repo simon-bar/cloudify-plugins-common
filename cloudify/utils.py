@@ -28,8 +28,11 @@ from cloudify.constants import LOCAL_IP_KEY, MANAGER_IP_KEY, \
     MANAGER_FILE_SERVER_URL_KEY
 
 
-def setup_logger(logger_name, logger_level=logging.DEBUG, handlers=None,
-                 remove_existing_handlers=True):
+def setup_logger(logger_name,
+                 logger_level=logging.INFO,
+                 handlers=None,
+                 remove_existing_handlers=True,
+                 logger_format=None):
     """
     :param logger_name: Name of the logger.
     :param logger_level: Level for the logger (not for specific handler).
@@ -42,6 +45,8 @@ def setup_logger(logger_name, logger_level=logging.DEBUG, handlers=None,
     :rtype: `logging.Logger`
     """
 
+    if logger_format is None:
+        logger_format = '%(asctime)s [%(levelname)s] [%(name)s] %(message)s'
     logger = logging.getLogger(logger_name)
 
     if remove_existing_handlers:
@@ -53,8 +58,7 @@ def setup_logger(logger_name, logger_level=logging.DEBUG, handlers=None,
         handler.setLevel(logging.DEBUG)
         handlers = [handler]
 
-    formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] '
-                                      '[%(name)s] %(message)s',
+    formatter = logging.Formatter(fmt=logger_format,
                                   datefmt='%H:%M:%S')
     for handler in handlers:
         handler.setFormatter(formatter)
