@@ -22,7 +22,7 @@ import tempfile
 import sys
 import os
 
-from cloudify.exceptions import CommandExecutionException
+from cloudify.exceptions import LocalCommandExecutionException
 from cloudify.constants import LOCAL_IP_KEY, MANAGER_IP_KEY, \
     MANAGER_REST_PORT_KEY, MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY, \
     MANAGER_FILE_SERVER_URL_KEY
@@ -167,7 +167,8 @@ class LocalCommandRunner(object):
             exit_on_failure=True,
             stdout_pipe=True,
             stderr_pipe=True,
-            cwd=None):
+            cwd=None,
+            quiet=True):
 
         """
         Runs local commands.
@@ -181,7 +182,8 @@ class LocalCommandRunner(object):
         :rtype: CommandExecutionResponse
         """
 
-        self.logger.debug('run: {0}'.format(command))
+        if not quiet:
+            self.logger.info('run: {0}'.format(command))
         shlex_split = shlex.split(command)
         stdout = subprocess.PIPE if stdout_pipe else None
         stderr = subprocess.PIPE if stderr_pipe else None
@@ -189,7 +191,7 @@ class LocalCommandRunner(object):
                              stderr=stderr, cwd=cwd)
         out, err = p.communicate()
         if p.returncode != 0:
-            error = CommandExecutionException(
+            error = LocalCommandExecutionException(
                 command=command,
                 error=err,
                 output=out,
@@ -199,9 +201,10 @@ class LocalCommandRunner(object):
             else:
                 self.logger.error(error)
 
-        return CommandExecutionResponse(command=command,
-                                        output=out,
-                                        code=p.returncode)
+        return LocalCommandExecutionResponse(
+            command=command,
+            output=out,
+            code=p.returncode)
 
 
 class CommandExecutionResponse(object):
@@ -218,3 +221,7 @@ class CommandExecutionResponse(object):
         self.command = command
         self.output = output
         self.code = code
+
+
+class LocalCommandExecutionResponse(CommandExecutionResponse):
+    pass
