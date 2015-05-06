@@ -168,7 +168,8 @@ class LocalCommandRunner(object):
             stdout_pipe=True,
             stderr_pipe=True,
             cwd=None,
-            quiet=True):
+            quiet=True,
+            execution_env=None):
 
         """
         Runs local commands.
@@ -182,14 +183,22 @@ class LocalCommandRunner(object):
         :rtype: CommandExecutionResponse
         """
 
-        if not quiet:
-            self.logger.info('run: {0}'.format(command))
         shlex_split = shlex.split(command)
         stdout = subprocess.PIPE if stdout_pipe else None
         stderr = subprocess.PIPE if stderr_pipe else None
+        env = os.environ.copy()
+        env.update(execution_env or {})
+        if not quiet:
+            self.logger.info('run: {0}'.format(command))
+
         p = subprocess.Popen(shlex_split, stdout=stdout,
-                             stderr=stderr, cwd=cwd)
+                             stderr=stderr, cwd=cwd, env=env)
         out, err = p.communicate()
+        if out:
+            out = out.rstrip()
+        if err:
+            err = err.rstrip()
+
         if p.returncode != 0:
             error = LocalCommandExecutionException(
                 command=command,
