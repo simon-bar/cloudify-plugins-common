@@ -23,9 +23,7 @@ import sys
 import os
 
 from cloudify.exceptions import LocalCommandExecutionException
-from cloudify.constants import LOCAL_IP_KEY, MANAGER_IP_KEY, \
-    MANAGER_REST_PORT_KEY, MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY, \
-    MANAGER_FILE_SERVER_URL_KEY
+from cloudify import env
 
 
 def setup_logger(logger_name,
@@ -68,42 +66,44 @@ def setup_logger(logger_name,
     return logger
 
 
-def get_local_ip():
-
-    """
-    Return the IP address used to connect to this machine by the management.
-    machine
-    """
-
-    return os.environ[LOCAL_IP_KEY]
-
-
 def get_manager_ip():
     """
     Returns the IP address of manager inside the management network.
     """
-    return os.environ[MANAGER_IP_KEY]
+    return os.environ[env.MANAGER_IP_KEY]
+
+
+def get_agent_name():
+
+    """
+    Returns the name of the agent running the operation
+    """
+    return os.environ[env.AGENT_NAME_KEY]
 
 
 def get_manager_file_server_blueprints_root_url():
     """
     Returns the blueprints root url in the file server.
     """
-    return os.environ[MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY]
+    return os.environ[env.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY]
 
 
 def get_manager_file_server_url():
     """
     Returns the manager file server base url.
     """
-    return os.environ[MANAGER_FILE_SERVER_URL_KEY]
+    return os.environ[env.MANAGER_FILE_SERVER_URL_KEY]
 
 
 def get_manager_rest_service_port():
     """
     Returns the port the manager REST service is running on.
     """
-    return int(os.environ[MANAGER_REST_PORT_KEY])
+    return int(os.environ[env.MANAGER_REST_PORT_KEY])
+
+
+def get_agent_process_management():
+    return os.environ[env.AGENT_PROCESS_MANAGEMENT_KEY]
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -122,24 +122,6 @@ def create_temp_folder():
     return path_join
 
 
-def get_cosmo_properties():
-    return {
-        "management_ip": get_manager_ip(),
-        "ip": get_local_ip()
-    }
-
-
-def find_type_in_kwargs(cls, all_args):
-    result = [v for v in all_args if isinstance(v, cls)]
-    if not result:
-        return None
-    if len(result) > 1:
-        raise RuntimeError(
-            "Expected to find exactly one instance of {0} in "
-            "kwargs but found {1}".format(cls, len(result)))
-    return result[0]
-
-
 class LocalCommandRunner(object):
 
     def __init__(self, logger=None):
@@ -147,6 +129,7 @@ class LocalCommandRunner(object):
         """
         :param logger: This logger will be used for
                        printing the output and the command.
+        :rtype: cloudify.utils.LocalCommandRunner
         """
 
         logger = logger or setup_logger('cloudify.local')

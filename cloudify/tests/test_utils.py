@@ -15,22 +15,14 @@
 
 
 import unittest
-import os
 
-from cloudify.constants import LOCAL_IP_KEY
 from cloudify.exceptions import CommandExecutionException
-
-__author__ = 'elip'
 
 
 class LocalCommandRunnerTest(unittest.TestCase):
 
     from cloudify.utils import LocalCommandRunner
     runner = LocalCommandRunner()
-
-    @classmethod
-    def setUpClass(cls):
-        os.environ[LOCAL_IP_KEY] = 'localhost'
 
     def test_run_command_success(self):
         command_execution_result = self.runner.run('echo Hello')

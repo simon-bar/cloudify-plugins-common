@@ -29,7 +29,7 @@ from os import path
 
 from celery import Celery
 
-from cloudify.constants import CELERY_WORK_DIR_PATH_KEY
+CELERY_WORK_DIR_PATH_KEY = 'asd'
 
 
 celery = Celery('cloudify.celery',
