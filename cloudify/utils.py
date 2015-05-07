@@ -156,12 +156,14 @@ class LocalCommandRunner(object):
              exit_on_failure=True,
              stdout_pipe=True,
              stderr_pipe=True,
-             cwd=None):
+             cwd=None,
+             quiet=False):
         return self.run('sudo {0}'.format(command),
                         exit_on_failure=exit_on_failure,
                         stderr_pipe=stderr_pipe,
                         stdout_pipe=stdout_pipe,
-                        cwd=cwd)
+                        cwd=cwd,
+                        quiet=quiet)
 
     def run(self, command,
             exit_on_failure=True,
