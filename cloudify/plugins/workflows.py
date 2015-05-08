@@ -394,21 +394,25 @@ def _host_post_start(host_node_instance):
     tasks = [_wait_for_host_to_start(host_node_instance)]
     if host_node_instance.node.properties['install_agent'] is True:
         tasks += [
-            host_node_instance.send_event('Installing worker'),
+            host_node_instance.send_event('Creating agent'),
             host_node_instance.execute_operation(
-                'cloudify.interfaces.worker_installer.install'),
+                'cloudify.interfaces.agent.create'),
+            host_node_instance.send_event('Configuring agent'),
             host_node_instance.execute_operation(
-                'cloudify.interfaces.worker_installer.start'),
+                'cloudify.interfaces.agent.configure'),
+            host_node_instance.send_event('Starting agent'),
+            host_node_instance.execute_operation(
+                'cloudify.interfaces.agent.start'),
         ]
         if plugins_to_install:
             tasks += [
-                host_node_instance.send_event('Installing host plugins'),
+                host_node_instance.send_event('Installing plugins'),
                 host_node_instance.execute_operation(
-                    'cloudify.interfaces.plugin_installer.install',
+                    'cloudify.interfaces.agent.install_plugins',
                     kwargs={
                         'plugins': plugins_to_install}),
                 host_node_instance.execute_operation(
-                    'cloudify.interfaces.worker_installer.restart',
+                    'cloudify.interfaces.agent.restart',
                     send_task_events=False)
             ]
     tasks += [
@@ -430,18 +434,19 @@ def _host_pre_stop(host_node_instance):
     ]
     if host_node_instance.node.properties['install_agent'] is True:
         tasks += [
-            host_node_instance.send_event('Uninstalling worker'),
+            host_node_instance.send_event('Stopping agent'),
             host_node_instance.execute_operation(
-                'cloudify.interfaces.worker_installer.stop'),
+                'cloudify.interfaces.agent.stop'),
+            host_node_instance.send_event('Deleting agent'),
             host_node_instance.execute_operation(
-                'cloudify.interfaces.worker_installer.uninstall')
+                'cloudify.interfaces.agent.delete')
         ]
 
     for task in tasks:
         if task.is_remote():
             _set_send_node_event_on_error_handler(
                 task, host_node_instance,
-                'Error occurred while uninstalling worker - ignoring...')
+                'Error occurred while uninstalling agent - ignoring...')
 
     return tasks
 
