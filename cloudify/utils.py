@@ -106,6 +106,10 @@ def get_agent_process_management():
     return os.environ[env.AGENT_PROCESS_MANAGEMENT_KEY]
 
 
+def get_agent_creation_dir():
+    return os.environ[env.CLOUDIFY_AGENT_CREATION_DIRECTORY_KEY]
+
+
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     """
     Generate and return a random string using upper case letters and digits.
@@ -171,13 +175,13 @@ class LocalCommandRunner(object):
         shlex_split = shlex.split(command)
         stdout = subprocess.PIPE if stdout_pipe else None
         stderr = subprocess.PIPE if stderr_pipe else None
-        env = os.environ.copy()
-        env.update(execution_env or {})
+        command_env = os.environ.copy()
+        command_env.update(execution_env or {})
         if not quiet:
             self.logger.info('run: {0}'.format(command))
 
         p = subprocess.Popen(shlex_split, stdout=stdout,
-                             stderr=stderr, cwd=cwd, env=env)
+                             stderr=stderr, cwd=cwd, env=command_env)
         out, err = p.communicate()
         if out:
             out = out.rstrip()
