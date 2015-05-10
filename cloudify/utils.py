@@ -22,7 +22,7 @@ import tempfile
 import sys
 import os
 
-from cloudify.exceptions import LocalCommandExecutionException
+from cloudify.exceptions import CommandExecutionException
 from cloudify import env
 
 
@@ -114,7 +114,7 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     """
     Generate and return a random string using upper case letters and digits.
     """
-    return ''.join(random.choice(chars) for x in range(size))
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 def create_temp_folder():
@@ -189,7 +189,7 @@ class LocalCommandRunner(object):
             err = err.rstrip()
 
         if p.returncode != 0:
-            error = LocalCommandExecutionException(
+            error = CommandExecutionException(
                 command=command,
                 error=err,
                 output=out,
@@ -199,7 +199,7 @@ class LocalCommandRunner(object):
             else:
                 self.logger.error(error)
 
-        return LocalCommandExecutionResponse(
+        return CommandExecutionResponse(
             command=command,
             output=out,
             code=p.returncode)
@@ -219,7 +219,3 @@ class CommandExecutionResponse(object):
         self.command = command
         self.output = output
         self.code = code
-
-
-class LocalCommandExecutionResponse(CommandExecutionResponse):
-    pass

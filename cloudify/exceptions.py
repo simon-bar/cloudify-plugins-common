@@ -113,10 +113,6 @@ class CommandExecutionException(Exception):
                     self.output or None)
 
 
-class LocalCommandExecutionException(CommandExecutionException):
-    pass
-
-
 class TimeoutException(Exception):
     """Indicates some kind of timeout happened."""
     def __init__(self, *args):
