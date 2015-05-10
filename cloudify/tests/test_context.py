@@ -18,7 +18,7 @@ from os.path import dirname
 
 import testtools
 
-from cloudify import env
+from cloudify import constants
 from cloudify import context
 from cloudify import exceptions
 from cloudify.utils import create_temp_folder
@@ -41,9 +41,9 @@ class CloudifyContextTest(testtools.TestCase):
         cls.file_server_process = FileServer(resources_path)
         cls.file_server_process.start()
 
-        os.environ[env.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY] \
+        os.environ[constants.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY] \
             = "http://localhost:{0}".format(PORT)
-        os.environ[env.MANAGER_FILE_SERVER_URL_KEY] = \
+        os.environ[constants.MANAGER_FILE_SERVER_URL_KEY] = \
             "http://localhost:{0}".format(PORT)
         cls.context = context.CloudifyContext({'blueprint_id': ''})
 
