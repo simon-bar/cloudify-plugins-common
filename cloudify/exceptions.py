@@ -96,7 +96,7 @@ class CommandExecutionException(Exception):
     :param output: process stdout output
     """
 
-    def __init__(self, command, code, error=None, output=None):
+    def __init__(self, command, error, output, code):
         self.command = command
         self.error = error
         self.output = output
@@ -111,10 +111,6 @@ class CommandExecutionException(Exception):
             .format(self.command, self.code,
                     self.error or None,
                     self.output or None)
-
-
-class LocalCommandExecutionException(CommandExecutionException):
-    pass
 
 
 class TimeoutException(Exception):

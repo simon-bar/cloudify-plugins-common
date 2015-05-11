@@ -22,8 +22,8 @@ import tempfile
 import sys
 import os
 
-from cloudify.exceptions import LocalCommandExecutionException
-from cloudify import env
+from cloudify.exceptions import CommandExecutionException
+from cloudify import constants
 
 
 def setup_logger(logger_name,
@@ -70,7 +70,7 @@ def get_manager_ip():
     """
     Returns the IP address of manager inside the management network.
     """
-    return os.environ[env.MANAGER_IP_KEY]
+    return os.environ[constants.MANAGER_IP_KEY]
 
 
 def get_agent_name():
@@ -78,43 +78,43 @@ def get_agent_name():
     """
     Returns the name of the agent running the operation
     """
-    return os.environ[env.AGENT_NAME_KEY]
+    return os.environ[constants.AGENT_NAME_KEY]
 
 
 def get_manager_file_server_blueprints_root_url():
     """
     Returns the blueprints root url in the file server.
     """
-    return os.environ[env.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY]
+    return os.environ[constants.MANAGER_FILE_SERVER_BLUEPRINTS_ROOT_URL_KEY]
 
 
 def get_manager_file_server_url():
     """
     Returns the manager file server base url.
     """
-    return os.environ[env.MANAGER_FILE_SERVER_URL_KEY]
+    return os.environ[constants.MANAGER_FILE_SERVER_URL_KEY]
 
 
 def get_manager_rest_service_port():
     """
     Returns the port the manager REST service is running on.
     """
-    return int(os.environ[env.MANAGER_REST_PORT_KEY])
+    return int(os.environ[constants.MANAGER_REST_PORT_KEY])
 
 
 def get_agent_process_management():
-    return os.environ[env.AGENT_PROCESS_MANAGEMENT_KEY]
+    return os.environ[constants.AGENT_PROCESS_MANAGEMENT_KEY]
 
 
 def get_agent_creation_dir():
-    return os.environ[env.CLOUDIFY_AGENT_CREATION_DIRECTORY_KEY]
+    return os.environ[constants.CLOUDIFY_AGENT_CREATION_DIRECTORY_KEY]
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     """
     Generate and return a random string using upper case letters and digits.
     """
-    return ''.join(random.choice(chars) for x in range(size))
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 def create_temp_folder():
@@ -128,7 +128,7 @@ def create_temp_folder():
 
 class LocalCommandRunner(object):
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, host='localhost'):
 
         """
         :param logger: This logger will be used for
@@ -136,8 +136,9 @@ class LocalCommandRunner(object):
         :rtype: cloudify.utils.LocalCommandRunner
         """
 
-        logger = logger or setup_logger('cloudify.local')
+        logger = logger or setup_logger('LocalCommandRunner')
         self.logger = logger
+        self.host = host
 
     def sudo(self, command,
              exit_on_failure=True,
@@ -178,7 +179,7 @@ class LocalCommandRunner(object):
         command_env = os.environ.copy()
         command_env.update(execution_env or {})
         if not quiet:
-            self.logger.info('run: {0}'.format(command))
+            self.logger.info('[{0}] run: {1}'.format(self.host, command))
 
         p = subprocess.Popen(shlex_split, stdout=stdout,
                              stderr=stderr, cwd=cwd, env=command_env)
@@ -189,7 +190,7 @@ class LocalCommandRunner(object):
             err = err.rstrip()
 
         if p.returncode != 0:
-            error = LocalCommandExecutionException(
+            error = CommandExecutionException(
                 command=command,
                 error=err,
                 output=out,
@@ -199,7 +200,7 @@ class LocalCommandRunner(object):
             else:
                 self.logger.error(error)
 
-        return LocalCommandExecutionResponse(
+        return CommandExecutionResponse(
             command=command,
             output=out,
             code=p.returncode)
@@ -219,7 +220,3 @@ class CommandExecutionResponse(object):
         self.command = command
         self.output = output
         self.code = code
-
-
-class LocalCommandExecutionResponse(CommandExecutionResponse):
-    pass

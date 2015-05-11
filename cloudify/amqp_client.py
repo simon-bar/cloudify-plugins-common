@@ -26,7 +26,11 @@ class AMQPClient(object):
     events_queue_name = 'cloudify-events'
     logs_queue_name = 'cloudify-logs'
 
-    def __init__(self, amqp_host):
+    def __init__(self, amqp_host=None):
+
+        if amqp_host is None:
+            amqp_host = get_manager_ip()
+
         self.events_queue = None
         self.logs_queue = None
         self.connection = pika.BlockingConnection(
