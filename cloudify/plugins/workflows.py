@@ -375,22 +375,15 @@ def _host_post_start(host_node_instance):
     tasks = []
     if host_node_instance.node.properties['install_agent'] is True:
         tasks += [
+            host_node_instance.send_event('Creating Agent'),
             host_node_instance.execute_operation(
                 'cloudify.interfaces.cloudify_agent.create'),
+            host_node_instance.send_event('Configuring Agent'),
             host_node_instance.execute_operation(
                 'cloudify.interfaces.cloudify_agent.configure'),
+            host_node_instance.send_event('Starting Agent'),
             host_node_instance.execute_operation(
-                'cloudify.interfaces.cloudify_agent.start'),
-
-            # agent installation may be running in an async process
-            # outside the workflow engine, like a user data script.
-            # in such case all the above tasks are actually no-ops and
-            # the agent may have not been started yet.
-            # this task will be retried until the agent has started,
-            # thus making sure we won't be sending tasks to this agent
-            # before it starts
-            host_node_instance.execute_operation(
-                'cloudify.interfaces.cloudify_agent.stats'),
+                'cloudify.interfaces.cloudify_agent.start')
         ]
         if plugins_to_install:
             tasks += [
